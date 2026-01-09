@@ -150,14 +150,17 @@ st.markdown("""
         margin-bottom: 1rem;
         display: flex;
         flex-direction: column;
+        color: #1a1a1a;
     }
     .user-message {
         background-color: #e3f2fd;
         border-left: 5px solid #2196F3;
+        color: #0d47a1;
     }
     .assistant-message {
         background-color: #f5f5f5;
         border-left: 5px solid #4CAF50;
+        color: #212121;
     }
     .result-card {
         background-color: #ffffff;
@@ -166,6 +169,7 @@ st.markdown("""
         padding: 1rem;
         margin-bottom: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        color: #212121;
     }
     .result-header {
         display: flex;
@@ -176,16 +180,17 @@ st.markdown("""
         border-bottom: 1px solid #e0e0e0;
     }
     .result-content {
-        color: #333;
+        color: #212121;
         line-height: 1.6;
         margin: 1rem 0;
+        font-weight: 400;
     }
     .result-meta {
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
         font-size: 0.9rem;
-        color: #666;
+        color: #424242;
     }
     .stat-box {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

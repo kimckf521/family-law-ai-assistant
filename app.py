@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-澳大利亚家庭法AI代理 - Streamlit Web界面
+Australian Family Law AI Assistant - Bilingual Streamlit Web Interface
+澳大利亚家庭法AI助手 - 双语Streamlit Web界面
 """
 
 import streamlit as st
@@ -10,20 +11,131 @@ import re
 import os
 from datetime import datetime
 from typing import List, Dict
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-CHUNKS_PATH = BASE_DIR / "family_law_chunks.json"
+# Language detection and configuration
+# 语言检测和配置
+LANGUAGES = {
+    'en': {
+        'name': 'English',
+        'flag': '🇬🇧',
+        'page_title': 'Australian Family Law AI Assistant',
+        'page_icon': '⚖️',
+        'title': '⚖️ Australian Family Law AI Assistant',
+        'subtitle': 'Instant access to 666 pages of Australian Family Law',
+        'search_placeholder': 'Ask about divorce, property, custody, maintenance...',
+        'search_button': '🔍 Search',
+        'example_questions': 'Example Questions',
+        'results_title': 'Search Results',
+        'no_results': 'No relevant results found. Try different keywords.',
+        'page_label': 'Page',
+        'relevance_label': 'Relevance',
+        'category_label': 'Category',
+        'search_history': 'Recent Searches',
+        'clear_history': 'Clear History',
+        'about': 'About',
+        'about_text': '''
+This AI assistant helps you quickly find relevant information from **The Family Law Book** 
+(666 pages). It uses advanced search to match your questions with the most relevant legal content.
 
-# 页面配置
+**Features:**
+- 🔍 Smart keyword search
+- 📄 Exact page references
+- 🏷️ Categorized by topic
+- 📊 1,042 searchable chunks
+
+**Disclaimer:** This provides legal information, not legal advice. 
+Always consult a qualified lawyer for specific legal matters.
+        ''',
+        'examples': [
+            "What are the requirements for divorce?",
+            "How is property divided in separation?",
+            "What factors affect child custody decisions?",
+            "How is child support calculated?",
+            "What is a de facto relationship?",
+            "What are parenting orders?",
+            "How does spousal maintenance work?",
+            "What is the Family Court process?",
+            "What are consent orders?",
+            "What happens to superannuation in divorce?",
+            "What is a binding financial agreement?",
+            "How long does divorce take?",
+            "What is shared parental responsibility?"
+        ],
+        'stats_title': 'Knowledge Base Statistics',
+        'stats_chunks': 'Text Chunks',
+        'stats_pages': 'Pages',
+        'stats_words': 'Words',
+        'stats_categories': 'Categories',
+        'loading': '🔄 Loading knowledge base...',
+        'searching': '🔍 Searching...',
+        'footer': 'Built with ❤️ for the legal community | Powered by Streamlit',
+    },
+    'zh': {
+        'name': '中文',
+        'flag': '🇨🇳',
+        'page_title': '澳大利亚家庭法AI助手',
+        'page_icon': '⚖️',
+        'title': '⚖️ 澳大利亚家庭法AI助手',
+        'subtitle': '即时访问666页澳大利亚家庭法内容',
+        'search_placeholder': '询问离婚、财产、抚养、赡养费等问题...',
+        'search_button': '🔍 搜索',
+        'example_questions': '示例问题',
+        'results_title': '搜索结果',
+        'no_results': '未找到相关结果。请尝试不同的关键词。',
+        'page_label': '页码',
+        'relevance_label': '相关度',
+        'category_label': '类别',
+        'search_history': '最近搜索',
+        'clear_history': '清空历史',
+        'about': '关于',
+        'about_text': '''
+这个AI助手帮助你快速从《家庭法手册》（666页）中找到相关信息。
+它使用先进的搜索技术将你的问题与最相关的法律内容匹配。
+
+**功能特点：**
+- 🔍 智能关键词搜索
+- 📄 精确页码引用
+- 🏷️ 按主题分类
+- 📊 1,042个可搜索文本块
+
+**免责声明：** 本系统提供法律信息，不是法律建议。
+具体法律问题请咨询专业律师。
+        ''',
+        'examples': [
+            "离婚需要什么条件？",
+            "分居时财产如何分割？",
+            "哪些因素影响子女抚养权决定？",
+            "子女抚养费如何计算？",
+            "什么是事实婚姻关系？",
+            "什么是育儿令？",
+            "配偶赡养费如何运作？",
+            "家庭法院的流程是什么？",
+            "什么是同意令？",
+            "离婚时退休金怎么处理？",
+            "什么是有约束力的财务协议？",
+            "离婚需要多长时间？",
+            "什么是共同父母责任？"
+        ],
+        'stats_title': '知识库统计',
+        'stats_chunks': '文本块',
+        'stats_pages': '页数',
+        'stats_words': '字数',
+        'stats_categories': '类别',
+        'loading': '🔄 正在加载知识库...',
+        'searching': '🔍 搜索中...',
+        'footer': '为法律社区用❤️构建 | 由Streamlit驱动',
+    }
+}
+
+# Page configuration
 st.set_page_config(
-    page_title="澳大利亚家庭法AI助手",
+    page_title="Family Law AI Assistant | 家庭法AI助手",
     page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# 自定义CSS
+# Custom CSS
 st.markdown("""
 <style>
     .main {
@@ -52,37 +164,55 @@ st.markdown("""
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 1rem;
-        margin: 0.5rem 0;
+        margin-bottom: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .page-reference {
-        display: inline-block;
-        background-color: #1976D2;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.85em;
-        font-weight: bold;
-        margin-right: 8px;
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e0e0e0;
     }
-    .keyword-tag {
-        display: inline-block;
-        background-color: #FFA726;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 0.8em;
-        margin: 2px;
+    .result-content {
+        color: #333;
+        line-height: 1.6;
+        margin: 1rem 0;
     }
-    .relevance-score {
-        color: #4CAF50;
-        font-weight: bold;
+    .result-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    .stat-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .example-btn {
+        margin: 0.25rem;
+    }
+    .language-switcher {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 999;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 </style>
 """, unsafe_allow_html=True)
 
+
 class FamilyLawSearchEngine:
-    """家庭法搜索引擎"""
+    """Family Law Search Engine | 家庭法搜索引擎"""
     
     def __init__(self, chunks_path: str):
         self.chunks = self._load_chunks(chunks_path)
@@ -90,341 +220,217 @@ class FamilyLawSearchEngine:
         
     @st.cache_data
     def _load_chunks(_self, path: str):
-        """加载知识库（使用缓存）"""
+        """Load knowledge base (cached) | 加载知识库（使用缓存）"""
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return data['chunks']
     
     def search(self, query: str, n_results: int = 5) -> List[Dict]:
-        """执行搜索"""
-        keywords = set(re.findall(r'\w+', query.lower()))
-        keywords = {k for k in keywords if len(k) >= 3}
-        
-        if not keywords:
-            return []
+        """Execute search | 执行搜索"""
+        query_lower = query.lower()
+        query_terms = set(re.findall(r'\b\w+\b', query_lower))
         
         scored_chunks = []
         for chunk in self.chunks:
             text_lower = chunk['text'].lower()
-            chapter_lower = chunk.get('chapter', '').lower()
-            
             score = 0
-            matched_keywords = []
             
-            for keyword in keywords:
-                text_matches = text_lower.count(keyword)
-                chapter_matches = chapter_lower.count(keyword)
-                
-                if text_matches > 0:
-                    score += text_matches * 2
-                    matched_keywords.append(keyword)
-                
-                if chapter_matches > 0:
-                    score += chapter_matches * 3
-                    if keyword not in matched_keywords:
-                        matched_keywords.append(keyword)
+            # Exact phrase match
+            if query_lower in text_lower:
+                score += 10
+            
+            # Term matching
+            text_terms = set(re.findall(r'\b\w+\b', text_lower))
+            matching_terms = query_terms & text_terms
+            score += len(matching_terms) * 2
+            
+            # Boost by term frequency
+            for term in matching_terms:
+                score += text_lower.count(term)
             
             if score > 0:
                 scored_chunks.append({
                     'chunk': chunk,
-                    'score': score,
-                    'matched_keywords': matched_keywords
+                    'score': score
                 })
         
         scored_chunks.sort(key=lambda x: x['score'], reverse=True)
-        
-        # 记录搜索历史
-        self.search_history.append({
-            'query': query,
-            'timestamp': datetime.now().isoformat(),
-            'results_count': len(scored_chunks[:n_results])
-        })
-        
         return scored_chunks[:n_results]
 
+
 def init_session_state():
-    """初始化session state"""
+    """Initialize session state | 初始化session state"""
+    if 'language' not in st.session_state:
+        st.session_state.language = 'en'
     if 'messages' not in st.session_state:
         st.session_state.messages = []
     if 'search_engine' not in st.session_state:
-        with st.spinner('🔄 正在加载知识库...'):
-            st.session_state.search_engine = FamilyLawSearchEngine(str(CHUNKS_PATH))
+        with st.spinner(LANGUAGES[st.session_state.language]['loading']):
+            # Use relative path for Streamlit Cloud compatibility
+            import os
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            chunks_path = os.path.join(current_dir, 'family_law_chunks.json')
+            st.session_state.search_engine = FamilyLawSearchEngine(chunks_path)
     if 'search_count' not in st.session_state:
         st.session_state.search_count = 0
 
-def display_result_card(result: Dict, index: int):
-    """显示结果卡片"""
+
+def detect_language(text: str) -> str:
+    """Detect if text contains Chinese characters | 检测文本是否包含中文字符"""
+    chinese_chars = re.findall(r'[\u4e00-\u9fff]', text)
+    return 'zh' if len(chinese_chars) > len(text) * 0.3 else 'en'
+
+
+def display_result_card(result: Dict, index: int, lang_data: dict):
+    """Display result card | 显示结果卡片"""
     chunk = result['chunk']
     score = result['score']
-    keywords = result['matched_keywords']
     
     with st.container():
-        st.markdown(f"""
-        <div class="result-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div>
-                    <span class="page-reference">📄 页码 {chunk['page_number']}</span>
-                    <span style="color: #666; font-size: 0.9em;">类型: {chunk['content_type']}</span>
-                </div>
-                <span class="relevance-score">相关度: {score}</span>
-            </div>
-            <div style="color: #666; font-size: 0.9em; margin-bottom: 0.5rem;">
-                📚 章节: {chunk.get('chapter', 'N/A')[:80]}...
-            </div>
-            <div style="margin-bottom: 0.5rem;">
-                🔑 匹配关键词: {' '.join([f'<span class="keyword-tag">{k}</span>' for k in keywords])}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<div class="result-card">', unsafe_allow_html=True)
         
-        # 文本预览（可展开）
-        with st.expander("📝 查看完整内容", expanded=(index == 0)):
-            # 高亮关键词
-            preview_text = chunk['text'][:800]
-            for kw in keywords:
-                pattern = re.compile(re.escape(kw), re.IGNORECASE)
-                preview_text = pattern.sub(f"**{kw.upper()}**", preview_text)
-            
-            st.markdown(preview_text + "...")
-            
-            if len(chunk['text']) > 800:
-                st.caption(f"（还有 {len(chunk['text']) - 800} 个字符...）")
+        # Header
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"### 📄 {lang_data['results_title']} #{index + 1}")
+        with col2:
+            st.markdown(f"**{lang_data['relevance_label']}:** {score}")
+        
+        # Content
+        st.markdown(f'<div class="result-content">{chunk["text"]}</div>', unsafe_allow_html=True)
+        
+        # Metadata
+        meta_parts = []
+        if 'page' in chunk:
+            meta_parts.append(f"📄 {lang_data['page_label']}: {chunk['page']}")
+        if 'category' in chunk:
+            meta_parts.append(f"🏷️ {lang_data['category_label']}: {chunk['category']}")
+        
+        if meta_parts:
+            st.markdown(f'<div class="result-meta">{" | ".join(meta_parts)}</div>', 
+                       unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
 
 def main():
-    """主应用"""
     init_session_state()
     
-    # 标题栏
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.title("⚖️ 澳大利亚家庭法AI助手")
-        st.caption("基于666页《The Family Law Book》| 1,042个知识块 | 295,140词")
-    with col2:
-        st.metric("总查询次数", st.session_state.search_count)
+    lang_data = LANGUAGES[st.session_state.language]
     
-    # 侧边栏
+    # Language switcher in sidebar
     with st.sidebar:
-        st.header("⚙️ 设置")
-        
-        # 结果数量
-        n_results = st.slider(
-            "显示结果数量",
-            min_value=3,
-            max_value=10,
-            value=5,
-            help="每次搜索返回的结果数量"
-        )
+        st.markdown("### 🌐 Language | 语言")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🇬🇧 English", use_container_width=True, 
+                        type="primary" if st.session_state.language == 'en' else "secondary"):
+                st.session_state.language = 'en'
+                st.rerun()
+        with col2:
+            if st.button("🇨🇳 中文", use_container_width=True,
+                        type="primary" if st.session_state.language == 'zh' else "secondary"):
+                st.session_state.language = 'zh'
+                st.rerun()
         
         st.markdown("---")
         
-        # 预设问题
-        st.subheader("💡 预设问题")
+        # About section
+        with st.expander(lang_data['about'], expanded=False):
+            st.markdown(lang_data['about_text'])
         
-        preset_questions = {
-            "🔍 离婚相关": {
-                "离婚条件": "divorce requirements separation",
-                "婚姻破裂证明": "irretrievable breakdown marriage",
-                "分居要求": "separation period requirements"
-            },
-            "💰 财产分割": {
-                "财产分割原则": "property settlement division",
-                "资产评估": "asset valuation contributions",
-                "不平等分配": "unequal division property"
-            },
-            "👶 子女相关": {
-                "抚养权安排": "child custody parenting arrangements",
-                "子女最佳利益": "best interests child",
-                "抚养费计算": "child support calculation"
-            },
-            "💵 赡养费": {
-                "配偶赡养": "spousal maintenance financial support",
-                "赡养费条件": "maintenance eligibility requirements"
-            },
-            "📋 程序表格": {
-                "申请表格": "application form affidavit",
-                "法庭程序": "court procedure hearing",
-                "紧急命令": "urgent interim orders"
-            }
+        # Statistics
+        st.markdown(f"### 📊 {lang_data['stats_title']}")
+        
+        stats_data = {
+            lang_data['stats_chunks']: "1,042",
+            lang_data['stats_pages']: "666",
+            lang_data['stats_words']: "295,140",
+            lang_data['stats_categories']: "8"
         }
         
-        for category, questions in preset_questions.items():
-            with st.expander(category):
-                for label, query in questions.items():
-                    if st.button(label, key=f"preset_{query}", use_container_width=True):
-                        st.session_state.current_query = query
-                        st.rerun()
+        for label, value in stats_data.items():
+            st.metric(label, value)
         
-        st.markdown("---")
-        
-        # 使用说明
-        with st.expander("📖 使用说明"):
-            st.markdown("""
-            **如何使用:**
-            1. 在搜索框输入问题（中英文均可）
-            2. 或点击左侧预设问题快速测试
-            3. 系统会返回最相关的法律文本
+        # Search history
+        if st.session_state.messages:
+            st.markdown("---")
+            st.markdown(f"### {lang_data['search_history']}")
+            if st.button(lang_data['clear_history'], use_container_width=True):
+                st.session_state.messages = []
+                st.session_state.search_count = 0
+                st.rerun()
             
-            **搜索技巧:**
-            - 使用英文关键词效果最好
-            - 多个关键词会提高准确率
-            - 可以搜索具体法条、表格、程序
-            
-            **示例问题:**
-            - divorce requirements
-            - property settlement
-            - child custody arrangements
-            - 离婚需要什么条件
-            - 财产如何分割
-            """)
-        
-        with st.expander("ℹ️ 关于系统"):
-            st.markdown("""
-            **系统信息:**
-            - 知识库: 666页澳大利亚家庭法手册
-            - 文本块: 1,042个
-            - 总字数: 295,140词
-            - 版本: v1.0 演示版
-            
-            **功能特点:**
-            - ✅ 智能语义搜索
-            - ✅ 精确页码引用
-            - ✅ 关键词高亮
-            - ✅ 相关度评分
-            - ✅ 中英文双语
-            
-            ⚠️ **重要提示:**
-            本系统提供法律信息，不是法律建议。
-            具体情况请咨询专业家庭法律师。
-            """)
-        
-        # 清除历史
-        st.markdown("---")
-        if st.button("🗑️ 清除搜索历史", use_container_width=True):
-            st.session_state.messages = []
-            st.session_state.search_count = 0
-            st.success("✅ 历史已清除")
-            st.rerun()
+            for msg in reversed(st.session_state.messages[-5:]):
+                if msg['role'] == 'user':
+                    st.markdown(f"🔍 {msg['content'][:50]}...")
     
-    # 主要内容区域
+    # Main content
+    st.title(lang_data['title'])
+    st.markdown(f"*{lang_data['subtitle']}*")
+    st.markdown("---")
     
-    # 检查是否有预设问题被触发
-    if 'current_query' in st.session_state:
-        query = st.session_state.current_query
-        del st.session_state.current_query
-    else:
-        # 搜索输入框
-        query = st.text_input(
-            "🔍 输入你的问题",
-            placeholder="例如: What are the requirements for divorce? 或 离婚需要什么条件？",
-            key="search_input"
-        )
+    # Example questions
+    with st.expander(f"💡 {lang_data['example_questions']}", expanded=False):
+        cols = st.columns(3)
+        for idx, example in enumerate(lang_data['examples']):
+            with cols[idx % 3]:
+                if st.button(example, key=f"example_{idx}", use_container_width=True):
+                    st.session_state.messages.append({
+                        'role': 'user',
+                        'content': example
+                    })
+                    st.rerun()
     
-    # 快捷按钮
-    col1, col2, col3, col4 = st.columns(4)
+    # Search input
+    col1, col2 = st.columns([5, 1])
     with col1:
-        if st.button("📋 离婚程序", use_container_width=True):
-            query = "divorce procedure requirements"
+        query = st.text_input(
+            "search_input",
+            placeholder=lang_data['search_placeholder'],
+            label_visibility="collapsed",
+            key="search_query"
+        )
     with col2:
-        if st.button("💰 财产分割", use_container_width=True):
-            query = "property settlement division"
-    with col3:
-        if st.button("👶 子女抚养", use_container_width=True):
-            query = "child custody parenting"
-    with col4:
-        if st.button("📄 申请表格", use_container_width=True):
-            query = "application form affidavit"
+        search_button = st.button(lang_data['search_button'], use_container_width=True, type="primary")
     
-    # 处理搜索
-    if query:
+    # Process search
+    if search_button and query:
+        # Auto-detect language and switch if needed
+        detected_lang = detect_language(query)
+        if detected_lang != st.session_state.language:
+            st.session_state.language = detected_lang
+            lang_data = LANGUAGES[detected_lang]
+        
+        st.session_state.messages.append({
+            'role': 'user',
+            'content': query
+        })
         st.session_state.search_count += 1
         
-        # 显示搜索查询
-        st.markdown(f"""
-        <div class="chat-message user-message">
-            <strong>🔍 你的问题:</strong><br>
-            {query}
-        </div>
-        """, unsafe_allow_html=True)
+        with st.spinner(lang_data['searching']):
+            results = st.session_state.search_engine.search(query, n_results=5)
         
-        # 执行搜索
-        with st.spinner('🔍 正在搜索相关法律内容...'):
-            results = st.session_state.search_engine.search(query, n_results)
-        
-        # 显示结果
         if results:
-            st.markdown(f"""
-            <div class="chat-message assistant-message">
-                <strong>✅ 找到 {len(results)} 个相关结果</strong>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # 显示每个结果
-            for i, result in enumerate(results):
-                display_result_card(result, i)
-            
-            # 提示信息
-            st.info("""
-            💡 **下一步建议:**
-            - 查阅完整PDF文档的相关页码
-            - 咨询专业家庭法律师获取个案建议
-            - 使用完整版AI代理获得智能解答（需要Claude API）
-            """)
-            
+            st.markdown(f"## {lang_data['results_title']}")
+            for idx, result in enumerate(results):
+                display_result_card(result, idx, lang_data)
         else:
-            st.warning("""
-            ❌ 未找到相关内容
-            
-            **建议:**
-            - 尝试使用更通用的英文关键词（如 divorce, property, child）
-            - 简化问题，使用核心关键词
-            - 参考左侧的预设问题
-            """)
+            st.warning(lang_data['no_results'])
     
-    else:
-        # 欢迎页面
-        st.markdown("""
-        ## 👋 欢迎使用澳大利亚家庭法AI助手
-        
-        ### 🎯 我能帮你做什么？
-        
-        - **查询法律条文** - 快速找到相关的法律规定
-        - **了解程序流程** - 理解法庭程序和申请要求
-        - **查找表格模板** - 获取申请表格和文书模板的页码
-        - **理解法律概念** - 学习家庭法的基本概念
-        
-        ### 🚀 开始使用
-        
-        1. 在上方搜索框输入你的问题
-        2. 或点击快捷按钮快速查询
-        3. 或使用左侧边栏的预设问题
-        
-        ### 📚 知识库覆盖范围
-        
-        - ✅ 离婚与分居
-        - ✅ 财产分割
-        - ✅ 子女抚养权与监护
-        - ✅ 子女及配偶赡养费
-        - ✅ 家庭暴力保护令
-        - ✅ De facto关系
-        - ✅ 法庭程序与表格
-        
-        ### ⚠️ 重要提示
-        
-        本系统提供的是**法律信息**，不是**法律建议**。每个案件都有其独特性，
-        具体法律问题请咨询合格的家庭法律师。
-        """)
-        
-        # 显示一些统计信息
+    # Display search history
+    if st.session_state.messages:
         st.markdown("---")
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("📄 总页数", "666")
-        with col2:
-            st.metric("📦 知识块", "1,042")
-        with col3:
-            st.metric("📝 总字数", "295K")
-        with col4:
-            st.metric("🔍 查询次数", st.session_state.search_count)
+        for msg in st.session_state.messages:
+            if msg['role'] == 'user':
+                st.markdown(f'<div class="chat-message user-message">🔍 {msg["content"]}</div>', 
+                          unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown(f"<div style='text-align: center; color: #666;'>{lang_data['footer']}</div>", 
+               unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()

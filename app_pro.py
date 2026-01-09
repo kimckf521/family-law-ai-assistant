@@ -105,14 +105,17 @@ st.markdown("""
         padding: 1.5rem;
         border-radius: 0.5rem;
         margin-bottom: 1rem;
+        color: #1a1a1a;
     }
     .user-message {
         background-color: #e3f2fd;
         border-left: 5px solid #2196F3;
+        color: #0d47a1;
     }
     .ai-message {
         background-color: #e8f5e9;
         border-left: 5px solid #4CAF50;
+        color: #1b5e20;
     }
     .search-result {
         background-color: #f5f5f5;
@@ -120,6 +123,7 @@ st.markdown("""
         padding: 1rem;
         border-radius: 0.5rem;
         margin-bottom: 0.5rem;
+        color: #212121;
     }
     .page-ref {
         background-color: #1976D2;

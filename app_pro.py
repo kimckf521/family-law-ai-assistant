@@ -36,10 +36,11 @@ LANGUAGES = {
 - 💬 Natural language understanding
 
 **Powered by:**
+- Claude Sonnet 4 AI
 - 666-page Family Law knowledge base
 - 1,042 searchable content chunks
 
-**Note:** This is the Pro version with AI capabilities.
+**Note:** This is the Pro version with AI capabilities. Requires Anthropic API key.
         ''',
         'search_mode': 'Search Only Mode',
         'ai_mode': 'AI Mode',
@@ -71,10 +72,11 @@ LANGUAGES = {
 - 💬 自然语言理解
 
 **技术支持：**
+- Claude Sonnet 4 AI
 - 666页家庭法知识库
 - 1,042个可搜索内容块
 
-**注意：** 这是带AI功能的专业版。
+**注意：** 这是带AI功能的专业版。需要Anthropic API密钥。
         ''',
         'search_mode': '纯搜索模式',
         'ai_mode': 'AI模式',
@@ -188,8 +190,8 @@ class FamilyLawAIAgent:
             return None
         
         context_text = "\n\n".join([
-            f"[Page {chunk['chunk']['page']}] {chunk['chunk']['text']}"
-            for chunk in context_chunks[:5]
+            f"[Page {result['chunk'].get('page', 'N/A')}] {result['chunk'].get('text', '')}"
+            for result in context_chunks[:5]
         ])
         
         if language == 'zh':

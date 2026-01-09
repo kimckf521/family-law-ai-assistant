@@ -11,6 +11,9 @@ import os
 from datetime import datetime
 from typing import List, Dict
 
+BASE_DIR = Path(__file__).resolve().parent
+CHUNKS_PATH = BASE_DIR / "family_law_chunks.json"
+
 # 页面配置
 st.set_page_config(
     page_title="澳大利亚家庭法AI助手",
@@ -144,9 +147,7 @@ def init_session_state():
         st.session_state.messages = []
     if 'search_engine' not in st.session_state:
         with st.spinner('🔄 正在加载知识库...'):
-            st.session_state.search_engine = FamilyLawSearchEngine(
-                '/home/claude/family_law_chunks.json'
-            )
+            st.session_state.search_engine = FamilyLawSearchEngine(str(CHUNKS_PATH))
     if 'search_count' not in st.session_state:
         st.session_state.search_count = 0
 

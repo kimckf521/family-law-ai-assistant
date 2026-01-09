@@ -10,6 +10,7 @@ import re
 import os
 from datetime import datetime
 from typing import List, Dict
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 CHUNKS_PATH = BASE_DIR / "family_law_chunks.json"
